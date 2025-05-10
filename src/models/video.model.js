@@ -70,6 +70,10 @@ const videoSchema = new Schema(
           type: String,
           required: false,
         },
+        otherReference: {
+          type: String,
+          required: false,
+        },
         owner: {
                     type: Schema.Types.ObjectId,// passing ref of user model
                     ref: "User"

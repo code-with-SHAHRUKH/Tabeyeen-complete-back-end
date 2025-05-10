@@ -335,6 +335,7 @@ const getsingleVideo = AsyncHandler(async (req, res) => {
                 explanationHindi: 1,
                 source: 1,
                 reference: 1,
+                otherReference:1,
                 videoLink: 1,
                 
                 owner: {
