@@ -16,6 +16,7 @@ import {registerUser,
 
 import {upload} from "../middlewares/multer.middleware.js"
 import {verifyJWT} from "../middlewares/auth.middleware.js"
+import { isSuperAdmin } from "../middlewares/superAdmin.middleware.js";
 
 const router = Router()
 
@@ -34,9 +35,12 @@ const router = Router()
 //     }]
 // ), registerUser)
 
-//filhal file upload nhi ho rhi registration krte hue...
-router.route("/register").post(registerUser)
 
+
+//filhal file upload nhi ho rhi registration krte hue...
+//or sirf super admin hi new user/admin add kr paae ga..
+// router.route("/register").post(verifyJWT,isSuperAdmin,registerUser)//only super admin can add/register Sub admin
+router.route("/register").post(registerUser)
 router.route("/login").post(loginUser)
 
 
@@ -45,10 +49,10 @@ router.route("/logout").post(verifyJWT,logoutUser)
 
 router.route("/refresh-token").post(refreshAccessToken)// is me middle ware na de to bhi chale
 
-router.route("/change-password").post(verifyJWT, changeCurrentPassword)
+router.route("/change-password").post(verifyJWT,changeCurrentPassword)
 router.route("/current-user").get(verifyJWT, getCurrentUser)
 // this is also protected i will make it protected in fututre
-router.route("/users-list").get(UsersList)
+router.route("/users-list").get(verifyJWT,isSuperAdmin,UsersList)
     
     router.route("/:bookId").get(getsingleUser)
     

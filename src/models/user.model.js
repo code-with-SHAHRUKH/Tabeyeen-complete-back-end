@@ -25,6 +25,12 @@ const userSchema = new Schema(
             trim: true, 
             index: true,// for searching purpose
         },
+        role: {
+            type: String,
+            enum: ['admin', 'superAdmin'],
+            required: true
+          },
+          
         avatar: {
             type: String, // cloudinary url
             // required: true,
@@ -76,7 +82,8 @@ userSchema.methods.generateAccessToken = function(){
             _id: this._id,
             email: this.email,
             username: this.username,
-            fullName: this.fullName
+            fullName: this.fullName,
+            role: this.role  // Add role to the token payload
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

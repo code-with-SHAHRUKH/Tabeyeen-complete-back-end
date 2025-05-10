@@ -1,5 +1,7 @@
 import { AsyncHandler } from "../utils/AsyncHandler.js";
 
+import {sendEmail} from "../utils/SendEmail.js";
+import crypto from 'crypto';
 import { ApiError } from "../utils/APIErrorStandarize.js"
 import {User} from "../models/user.model.js"
 import {uploadOnCloudinary,deleteFromCloudinary} from "../utils/Cloudinary.js"
@@ -26,6 +28,8 @@ const generateAccessAndRefereshTokens = async(userId) =>{
     }
 }
 
+
+// this is old logic to generateUser
 const registerUser = AsyncHandler( 
     async (req,res,next,error) =>
      {
@@ -40,11 +44,11 @@ const registerUser = AsyncHandler(
     // check for user creation
     // return response
     // fullName, username, email, password
-    const {fullName, email, username, password } = req.body
-    console.log("data: ", fullName, email, username, password);
+    const {fullName, email, username, password, role  } = req.body
+    console.log("data: ", fullName, email, username, password, role );
 
     if (
-        [fullName, email, username, password].some((field) => field?.trim() === "")
+        [fullName, email, username, password, role ].some((field) => field?.trim() === "")
     ) {
         console.log("hello i m issue");
         throw new ApiError(400, "All fields are required")
@@ -67,6 +71,7 @@ const registerUser = AsyncHandler(
         // coverImage: coverImage?.url || "",
         email, 
         password,
+        role, 
         username: username.toLowerCase()
     })
 
@@ -107,6 +112,62 @@ console.log("Created user in Db:",user);
 
      }
  )
+
+
+// this is new logic is me new user ko mail jay gi
+
+
+// const registerUser = AsyncHandler(async (req, res) => {
+//   const { fullName, email, username, role } = req.body;
+
+//   if ([fullName, email, username, role].some((field) => field?.trim() === "")) {
+//     throw new ApiError(400, "All fields are required");
+//   }
+
+//   const existedUser = await User.findOne({
+//     $or: [{ username }, { email }],
+//   });
+
+//   if (existedUser) {
+//     throw new ApiError(409, "User with email or username already exists");
+//   }
+
+//   // Generate a random password (e.g., 12 characters)
+//   const plainPassword = crypto.randomBytes(6).toString('hex');
+
+//   // Create user (password will be auto-hashed by the pre-save hook)
+//   const user = await User.create({
+//     fullName,
+//     email,
+//     username: username.toLowerCase(),
+//     role,
+//     password: plainPassword, // plain password; schema will hash it
+//     isFirstLogin: true,      // optional: use this to force password reset on first login
+//   });
+
+//   const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+//   if (!createdUser) {
+//     throw new ApiError(500, "Something went wrong while registering the user");
+//   }
+
+//   // Send email with credentials
+//   await sendEmail({
+//     to: email,
+//     subject: 'Your Admin Account Credentials',
+//     html: `
+//       <p>Dear ${fullName},</p>
+//       <p>Your admin account has been created successfully.</p>
+//       <p><strong>Email:</strong> ${email}</p>
+//       <p><strong>Password:</strong> ${plainPassword}</p>
+//       <p>Please log in and change your password immediately.</p>
+//     `,
+//   });
+
+//   return res.status(201).json(
+//     new ApiResponse(201, { user: createdUser }, "Admin registered and credentials sent via email")
+//   );
+// });
 
 
 
@@ -302,7 +363,7 @@ const getCurrentUser = AsyncHandler(async(req, res) =>
 
 const UsersList = AsyncHandler(async(req, res) =>
     {
-        const users = await User.find()
+        const users = await User.find().select('-password');
    return res
    .status(200)
    .json(new ApiResponse(

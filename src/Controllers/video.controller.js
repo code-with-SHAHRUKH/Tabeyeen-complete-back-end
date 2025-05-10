@@ -159,9 +159,9 @@ const stringFields = [
   }
   
   // Then, separately check Quran References
-  if (!Array.isArray(quranRefs) || quranRefs.length === 0) {
-    throw new ApiError(400, "At least one Quran reference is required");
-  }
+//   if (!Array.isArray(quranRefs) || quranRefs.length === 0) {
+//     throw new ApiError(400, "At least one Quran reference is required");
+//   }
   
 //   console.log("Quaran Ref:",quranReferences)
   // Then, separately check Quran References
@@ -180,8 +180,11 @@ const stringFields = [
    // hamara Video model directly Database k saath connected he
 
    //save Quaran References in saperate Table QuranReference
-   const savedQuranRefs = await QuranReference.insertMany(quranRefs);
+   
+ const savedQuranRefs = await QuranReference.insertMany(quranRefs);
    console.log("Quran Refs Saved in Db",savedQuranRefs)
+ 
+  
    const video = await Video.create({
        termArabic,
        termRoman,
@@ -193,7 +196,7 @@ const stringFields = [
        videoLink:videoLink||"",
        otherReference:otherReference||"",
        owner: userId, //Save logged-in user's ID as owner
-       quranReferences: savedQuranRefs.map(ref => ref._id)//this is array of Ids
+       quranReferences: savedQuranRefs.map(ref => ref._id)||[]//this is array of Ids
        })
 
    const createdVideo = await Video.findById(video._id)
@@ -415,7 +418,7 @@ try {
   return res.status(400).json({ error: "Invalid quranReferencesData format (should be JSON array)" });
 }
 
-   console.log(" quranRefs in Json formate: ", quranRefs[0].ayahUrdu);
+   console.log(" quranRefs in Json formate: ", quranRefs);
     // Validate the fields
     const stringFields = [
         termArabic, 
@@ -434,9 +437,9 @@ try {
     }
     
     // Validate Quran References (if provided)
-    if (quranRefs && (!Array.isArray(quranRefs) || quranRefs.length === 0)) {
-        throw new ApiError(400, "At least one Quran reference is required if provided");
-    }
+    // if (quranRefs && (!Array.isArray(quranRefs) || quranRefs.length === 0)) {
+    //     throw new ApiError(400, "At least one Quran reference is required if provided");
+    // }
 
     // Find existing video (term) to update
     const existingVideo = await Video.findById(videoId);
@@ -462,14 +465,15 @@ try {
     if (quranRefs) {
         // Add or update Quran references
         for (const ref of quranRefs) {
-            if (ref.id) {
+            const refId = ref.id || ref._id;
+            if (refId) {
                 // If ID exists, update the reference
                 const updatedRef = await QuranReference.findByIdAndUpdate(
-                    ref.id, 
+                    refId, 
                     { $set: ref },
                     { new: true }
                 );
-                updatedReferenceIds = updatedReferenceIds.filter(id => id !== ref.id); // Remove the old reference id
+                updatedReferenceIds = updatedReferenceIds.filter(id => id !==refId); // Remove the old reference id
                 updatedReferenceIds.push(updatedRef._id); // Add updated reference ID
             } else {
                 // If no ID, create a new reference
@@ -494,6 +498,9 @@ try {
     // Update the references in the video document
     if (updatedReferenceIds.length > 0) {
         updateFields.quranReferences = updatedReferenceIds;
+    }
+    if (updatedReferenceIds.length == 0) {
+        updateFields.quranReferences = [];
     }
 
     // Update the video (term) in the database
