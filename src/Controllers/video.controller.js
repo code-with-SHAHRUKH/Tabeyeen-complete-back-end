@@ -215,17 +215,63 @@ console.log("Creayed video in Db:",createdVideo)
 
 
  // how to get all Terminologies:
- const VideosList = AsyncHandler(async (req, res) => {
-    const Videos = await Video.find().sort({ createdAt: -1 }); // Newest first
+//  const VideosList = AsyncHandler(async (req, res) => {
+//     const Videos = await Video.find().sort({ createdAt: -1 }); // Newest first
   
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        Videos,
-        "Terminologies fetched successfully"
-      )
-    );
-  });
+//     return res.status(200).json(
+//       new ApiResponse(
+//         200,
+//         Videos,
+//         "Terminologies fetched successfully"
+//       )
+//     );
+//   });
+
+ const VideosList = AsyncHandler(async (req, res) => {
+  // ------- Parse query-params -------
+  const search = req.query.search || '';
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+  const skip = (page - 1) * limit;
+
+  // ------- Build filter ------------
+  let filter = {};
+
+  // jin terms k 1st letters same hon ge woh aae gi
+ if (search) {
+  filter = {
+    $or: [
+      { termArabic: { $regex: `^${search}`, $options: 'i' } },
+      { termRoman: { $regex: `^${search}`, $options: 'i' } },
+      { explanationEnglish: { $regex: `^${search}`, $options: 'i' } },
+      { explanationUrdu: { $regex: `^${search}`, $options: 'i' } },
+      { explanationHindi: { $regex: `^${search}`, $options: 'i' } },
+    ],
+  };
+}
+
+  // ------- Query DB with pagination -------
+  const [videos, totalCount] = await Promise.all([
+    Video.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Video.countDocuments(filter),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return res.status(200).json(
+    new ApiResponse(200,
+      {
+        items: videos,
+        meta: { page, limit, totalPages, totalCount },
+      },
+      'Terminologies fetched successfully'
+    )
+  );
+});
+
   
 
 // how to get single video:---> using populate method
