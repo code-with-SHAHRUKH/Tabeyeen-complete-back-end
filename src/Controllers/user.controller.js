@@ -1,5 +1,6 @@
 import { AsyncHandler } from "../utils/AsyncHandler.js";
-
+import { oauth2Client } from "../utils/GoogleConfig.js";
+import axios from "axios";
 import {sendEmail} from "../utils/SendEmail.js";
 import crypto from 'crypto';
 import { ApiError } from "../utils/APIErrorStandarize.js"
@@ -44,23 +45,21 @@ const registerUser = AsyncHandler(
     // check for user creation
     // return response
     // fullName, username, email, password
-    const {fullName, email, username, password, role  } = req.body
-    console.log("data: ", fullName, email, username, password, role );
+    const {fullName, username, role  } = req.body
+    console.log("data from frontend :", fullName, role,req.body );
 
     if (
-        [fullName, email, username, password, role ].some((field) => field?.trim() === "")
+        [fullName, username, role ].some((field) => field?.trim() === "")
     ) {
         console.log("hello i m issue");
         throw new ApiError(400, "All fields are required")
     }
 
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
-    })
+    const existedUser = await User.findOne({ username })
 
     console.log("User present:",existedUser);
     if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists")
+        throw new ApiError(409, "User with username already exists")
     }
 
     // hamara User model directly Database k saath connected he
@@ -69,10 +68,10 @@ const registerUser = AsyncHandler(
         fullName,
         // avatar: avatar.url,
         // coverImage: coverImage?.url || "",
-        email, 
-        password,
+        email:username, 
+        password:"",
         role, 
-        username: username.toLowerCase()
+        username
     })
 
 console.log("Created user in Db:",user);
@@ -80,7 +79,7 @@ console.log("Created user in Db:",user);
 
     const createdUser = await User.findById(user._id).select(
         // agr user Db me created he to is me se ye ye cheeze hata do or Client ko do
-        "-password -refreshToken"
+        "-refreshToken"
     )
 
     if (!createdUser) {
@@ -95,20 +94,9 @@ console.log("Created user in Db:",user);
 
     //res.status ko hi zyada tr server accept--> res.json k ander status bhi theek hi he
 
-    return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-        // mobile kookies accept nhi krta use responce hi samagh aae ga
-        new ApiResponse(
-            200, 
-            {
-                user: createdUser, accessToken, refreshToken
-            },
-            "User registered In Successfully"
-        )
-    )
+ return res.status(201).json(
+    new ApiResponse(201, { user: createdUser }, "Sub-admin created successfully")
+);
 
      }
  )
@@ -181,23 +169,21 @@ console.log("Created user in Db:",user);
     //access and referesh token--Generation
     //send cookie
     //send responce
-    const { username,email, password} = req.body
-    console.log("Data from front end",email,username,req.body);
+    const { username, password} = req.body
+    console.log("Data from front end",username,req.body);
 
     // if (!username && !email) {
     //     throw new ApiError(400, "username or email is required")
     // }
     
     // Here is an alternative of above code based on logic discussed in video:
-    if (!(username || email)) {
-        throw new ApiError(400, "username or email is required")
+    if (!(username)) {
+        throw new ApiError(400, "username is required")
         
     }
 
-    const user = await User.findOne({
-        $or: [{username}, {email}]
-    })
-
+  const user = await User.findOne({ username });
+console.log("data in db:",user);
     if (!user) {
         throw new ApiError(404, "User does not exist please Register your self")
     }
@@ -240,6 +226,58 @@ console.log("Created user in Db:",user);
     )
 
 })
+
+
+ const googleAuth = async (req, res, next) => {
+    const code = req.query.code;
+
+    console.log("Code recieved in backend server",code)
+
+    try {
+        // console.log("Trying to exchange code with redirect_uri:", oauth2Client.redirectUri);
+  const googleRes = await oauth2Client.getToken(code);
+  console.log("xyz:", googleRes.res); // <-- Should show access_token, id_token, etc.
+} catch (error) {
+  console.error("Error in getToken:", error.response?.data || error.message || error);
+}
+    // try {
+    //        {/*send this code to google again*/}
+
+    //     const googleRes = await oauth2Client.getToken(code);
+    //     console.log("xyz:",googleRes);
+    //     oauth2Client.setCredentials(googleRes.tokens);
+    //     const userRes = await axios.get(
+    //         // https://www.googleapis.com/oauth2/v1/certs"
+    //         `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
+    //     );
+    //     console.log("Userres from Google:",userRes)
+    //     // const { email, name, picture } = userRes.data;
+    //     // console.log("yeh woh hai jo googlene dia",userRes);
+    //     // let user = await User.findOne({ email });
+
+    //     // if (!user) {
+    //     //     user = await User.create({
+    //     //         name,
+    //     //         email,
+    //     //         image: picture,
+    //     //     });
+    //     // }
+    //     // const { _id } = user;
+    //     // const token = jwt.sign({ _id, email },
+    //     //     process.env.JWT_SECRET, {
+    //     //     expiresIn: process.env.JWT_TIMEOUT,
+    //     // });
+    //     res.status(200).json({
+    //         message: 'success',
+    //         // token,
+    //         // user,
+    //     });
+    // } catch (err) {
+    //     res.status(500).json({
+    //         message: "Internal Server Error aa raha he "
+    //     })
+    // }
+};
 
 
 const logoutUser = AsyncHandler(async(req, res) => {
@@ -655,6 +693,7 @@ const getWatchHistory = AsyncHandler(async(req, res) => {
  export {
     registerUser,
     loginUser,
+    googleAuth,
     logoutUser,
     refreshAccessToken,
     changeCurrentPassword,

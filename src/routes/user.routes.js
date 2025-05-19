@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {registerUser,
+        googleAuth,
         loginUser,
         logoutUser,
         refreshAccessToken,
@@ -39,10 +40,15 @@ const router = Router()
 
 //filhal file upload nhi ho rhi registration krte hue...
 //or sirf super admin hi new user/admin add kr paae ga..
-// router.route("/register").post(verifyJWT,isSuperAdmin,registerUser)//only super admin can add/register Sub admin
+router.route("/register").post(verifyJWT,isSuperAdmin,registerUser)//only super admin can add/register Sub admin
 // router.route("/register").post(registerUser)
+
+//login for super admin
 router.route("/login").post(loginUser)
 
+//login for Subadmin using google auth
+
+router.route("/google").get(googleAuth)
 
 //    ---------------> Secured routes <---------------
 router.route("/logout").post(verifyJWT,logoutUser)

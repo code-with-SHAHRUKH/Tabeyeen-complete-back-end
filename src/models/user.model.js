@@ -14,7 +14,7 @@ const userSchema = new Schema(
         },
         email: {
             type: String,
-            required: true,
+            required: false,
             unique: true,
             lowecase: true,
             trim: true, 
@@ -27,7 +27,7 @@ const userSchema = new Schema(
         },
         role: {
             type: String,
-            enum: ['admin', 'superAdmin'],
+            enum: ['admin', 'Data Entry Operator'],
             required: true
           },
           
@@ -46,7 +46,7 @@ const userSchema = new Schema(
         ],
         password: {
             type: String,
-            required: [true, 'Password is required']
+            required: [false, 'Password is required only in case of Super admin']
         },
         refreshToken: {
             type: String

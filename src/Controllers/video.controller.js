@@ -228,8 +228,11 @@ console.log("Creayed video in Db:",createdVideo)
 //   });
 
  const VideosList = AsyncHandler(async (req, res) => {
+
   // ------- Parse query-params -------
   const search = req.query.search || '';
+  console.log("Searching this alphabet:",search);
+  
   const page = Math.max(parseInt(req.query.page) || 1, 1);
   const limit = Math.max(parseInt(req.query.limit) || 10, 1);
   const skip = (page - 1) * limit;
@@ -238,15 +241,22 @@ console.log("Creayed video in Db:",createdVideo)
   let filter = {};
 
   // jin terms k 1st letters same hon ge woh aae gi
- if (search) {
+if (search === 'ا') {
   filter = {
     $or: [
-      { termArabic: { $regex: `^${search}`, $options: 'i' } },
+      { termArabic: { $regex: '^[اأإآ]' } },
+      { termRoman: { $regex: '^a', $options: 'i' } }, // optional: agar alif Roman 'a' ko map kar rahe ho
+    ]
+  };
+} else if (search) {
+  filter = {
+    $or: [
+      { termArabic: { $regex: `^${search}` } },
       { termRoman: { $regex: `^${search}`, $options: 'i' } },
       { explanationEnglish: { $regex: `^${search}`, $options: 'i' } },
       { explanationUrdu: { $regex: `^${search}`, $options: 'i' } },
       { explanationHindi: { $regex: `^${search}`, $options: 'i' } },
-    ],
+    ]
   };
 }
 
@@ -259,6 +269,8 @@ console.log("Creayed video in Db:",createdVideo)
     Video.countDocuments(filter),
   ]);
 
+
+  console.log(search,"se start hone wali terms yeh he:",videos);
   const totalPages = Math.ceil(totalCount / limit);
 
   return res.status(200).json(
