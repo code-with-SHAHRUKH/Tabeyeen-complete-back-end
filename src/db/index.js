@@ -5,10 +5,11 @@ const ConnectDB=async () =>
     {
 try {
     let res=await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`);
+
     console.log("hi server is connected with DB on this Host:",res.connection.host);// on which host the server is conneteing with DB
   
 } catch (error) {
-    console.log("Error during connection:",error);
+    console.log("Error during Db connection:",error);
     process.exit(1)
 }
 }

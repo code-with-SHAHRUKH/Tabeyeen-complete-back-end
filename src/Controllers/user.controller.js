@@ -1,8 +1,8 @@
 import { AsyncHandler } from "../utils/AsyncHandler.js";
-import { oauth2Client } from "../utils/GoogleConfig.js";
-import axios from "axios";
-import {sendEmail} from "../utils/SendEmail.js";
-import crypto from 'crypto';
+// import { oauth2Client } from "../utils/GoogleConfig.js";
+// import axios from "axios";
+// import {sendEmail} from "../utils/SendEmail.js";
+// import crypto from 'crypto';
 import { ApiError } from "../utils/APIErrorStandarize.js"
 import {User} from "../models/user.model.js"
 import {uploadOnCloudinary,deleteFromCloudinary} from "../utils/Cloudinary.js"
@@ -229,54 +229,55 @@ console.log("data in db:",user);
 
 
  const googleAuth = async (req, res, next) => {
-    const code = req.query.code;
+    // const {email} = req.body;
 
-    console.log("Code recieved in backend server",code)
+    const { email } = req.body
+    console.log("Data from front end",email);
 
-    try {
-        // console.log("Trying to exchange code with redirect_uri:", oauth2Client.redirectUri);
-  const googleRes = await oauth2Client.getToken(code);
-  console.log("xyz:", googleRes.res); // <-- Should show access_token, id_token, etc.
-} catch (error) {
-  console.error("Error in getToken:", error.response?.data || error.message || error);
-}
-    // try {
-    //        {/*send this code to google again*/}
-
-    //     const googleRes = await oauth2Client.getToken(code);
-    //     console.log("xyz:",googleRes);
-    //     oauth2Client.setCredentials(googleRes.tokens);
-    //     const userRes = await axios.get(
-    //         // https://www.googleapis.com/oauth2/v1/certs"
-    //         `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
-    //     );
-    //     console.log("Userres from Google:",userRes)
-    //     // const { email, name, picture } = userRes.data;
-    //     // console.log("yeh woh hai jo googlene dia",userRes);
-    //     // let user = await User.findOne({ email });
-
-    //     // if (!user) {
-    //     //     user = await User.create({
-    //     //         name,
-    //     //         email,
-    //     //         image: picture,
-    //     //     });
-    //     // }
-    //     // const { _id } = user;
-    //     // const token = jwt.sign({ _id, email },
-    //     //     process.env.JWT_SECRET, {
-    //     //     expiresIn: process.env.JWT_TIMEOUT,
-    //     // });
-    //     res.status(200).json({
-    //         message: 'success',
-    //         // token,
-    //         // user,
-    //     });
-    // } catch (err) {
-    //     res.status(500).json({
-    //         message: "Internal Server Error aa raha he "
-    //     })
+    // if (!username && !email) {
+    //     throw new ApiError(400, "username or email is required")
     // }
+    
+    // Here is an alternative of above code based on logic discussed in video:
+    if (!(email)) {
+        throw new ApiError(400, "username is required")
+        
+    }
+
+  const user = await User.findOne({ email });
+console.log("data in db:",user);
+    if (!user) {
+        throw new ApiError(404, "User does not exist please Register your self")
+    }
+
+
+
+   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+
+// ab updated user ko db se fetch kare ge--> because tokens ab save hue he--> ab user k paas refresh token he
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+// frontend/browser per kooklies send krne k lea hume options desighn krne perte...
+    const options = {
+        // in options k through hum kookies ko sirf server se modifyable bna de ge
+        //nhi to koi bhi fronend se inhe modify kr skta
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        // mobile kookies accept nhi krta use responce hi samagh aae ga
+        new ApiResponse(
+            200, 
+            {
+                user: loggedInUser, accessToken, refreshToken
+            },
+            "User logged In Successfully"
+        )
+    )
 };
 
 

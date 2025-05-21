@@ -48,7 +48,7 @@ router.route("/login").post(loginUser)
 
 //login for Subadmin using google auth
 
-router.route("/google").get(googleAuth)
+router.route("/google").post(googleAuth)
 
 //    ---------------> Secured routes <---------------
 router.route("/logout").post(verifyJWT,logoutUser)
