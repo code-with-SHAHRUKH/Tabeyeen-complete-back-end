@@ -398,7 +398,7 @@ const getsingleVideo = AsyncHandler(async (req, res) => {
                 
                 owner: {
                     fullName: 1,
-                    username: 1,
+                    email: 1,
                 },
                 quranReferences: 1 // <-- ab Quran References bhi response me aayengi
             }

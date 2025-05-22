@@ -4,20 +4,13 @@ import bcrypt from "bcrypt"
 
 const userSchema = new Schema(
     {
-        username: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true, 
-            index: true,// for searching purpose
-        },
         email: {
             type: String,
             required: false,
             unique: true,
-            lowecase: true,
+            lowercase: true,
             trim: true, 
+            index: true,// for searching purpose
         },
         fullName: {
             type: String,
@@ -27,9 +20,13 @@ const userSchema = new Schema(
         },
         role: {
             type: String,
-            enum: ['admin', 'Data Entry Operator'],
+            enum: ['superAdmin', 'Data Entry Operator'],
             required: true
           },
+          privileges: {
+      type: [String],
+      required: true,
+    },
           
         avatar: {
             type: String, // cloudinary url
@@ -49,7 +46,8 @@ const userSchema = new Schema(
             required: [false, 'Password is required only in case of Super admin']
         },
         refreshToken: {
-            type: String
+            type: String,
+            required: false
         }
 
     },
@@ -81,9 +79,9 @@ userSchema.methods.generateAccessToken = function(){
         {
             _id: this._id,
             email: this.email,
-            username: this.username,
             fullName: this.fullName,
-            role: this.role  // Add role to the token payload
+            role: this.role,  // Add role to the token payload
+            privileges: this.privileges,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

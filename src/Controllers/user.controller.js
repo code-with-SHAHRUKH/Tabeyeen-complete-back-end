@@ -45,33 +45,35 @@ const registerUser = AsyncHandler(
     // check for user creation
     // return response
     // fullName, username, email, password
-    const {fullName, username, role  } = req.body
-    console.log("data from frontend :", fullName, role,req.body );
+    const {fullName, email} = req.body
+    console.log("data from frontend :", fullName,req.body );
 
     if (
-        [fullName, username, role ].some((field) => field?.trim() === "")
+        [fullName, email].some((field) => field?.trim() === "")
     ) {
         console.log("hello i m issue");
         throw new ApiError(400, "All fields are required")
     }
 
-    const existedUser = await User.findOne({ username })
+    const existedUser = await User.findOne({email})
 
     console.log("User present:",existedUser);
     if (existedUser) {
         throw new ApiError(409, "User with username already exists")
     }
-
+const privileges = JSON.parse(req.body.privileges); // Important!
+console.log(privileges);
     // hamara User model directly Database k saath connected he
     
     const user = await User.create({
         fullName,
+        privileges,
         // avatar: avatar.url,
         // coverImage: coverImage?.url || "",
-        email:username, 
-        password:"",
-        role, 
-        username
+        email, 
+        password:req.body.password || "",
+       role:req.body.role || "Data Entry Operator"
+        
     })
 
 console.log("Created user in Db:",user);
@@ -169,23 +171,23 @@ console.log("Created user in Db:",user);
     //access and referesh token--Generation
     //send cookie
     //send responce
-    const { username, password} = req.body
-    console.log("Data from front end",username,req.body);
+    const { email, password} = req.body
+    console.log("Data from front end",email,req.body);
 
     // if (!username && !email) {
     //     throw new ApiError(400, "username or email is required")
     // }
     
     // Here is an alternative of above code based on logic discussed in video:
-    if (!(username)) {
+    if (!(email)) {
         throw new ApiError(400, "username is required")
         
     }
 
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ email });
 console.log("data in db:",user);
     if (!user) {
-        throw new ApiError(404, "User does not exist please Register your self")
+          return next(new ApiError(404, "User does not exist please Register your self"));
     }
 
 
@@ -548,7 +550,8 @@ const getUserChannelProfile = AsyncHandler(async(req, res) => {
         {
             // ye pipeline parameter se ane wale user ko Db k documents se match krta/serach krta
             $match: {
-                username: username?.toLowerCase()
+                // username: username?.toLowerCase()
+                email: email?.toLowerCase()
             }
         },
 
@@ -608,7 +611,7 @@ const getUserChannelProfile = AsyncHandler(async(req, res) => {
         {
             $project: {
                 fullName: 1,
-                username: 1,
+                // username: 1,
                 subscribersCount: 1,
                 channelsSubscribedToCount: 1,
                 isSubscribed: 1,
@@ -658,7 +661,8 @@ const getWatchHistory = AsyncHandler(async(req, res) => {
                                 {
                                     $project: {
                                         fullName: 1,
-                                        username: 1,
+                                        // username: 1,
+                                        email:1,
                                         avatar: 1
                                     }
                                 }
