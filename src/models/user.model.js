@@ -106,4 +106,8 @@ userSchema.methods.generateRefreshToken = function(){
 }
 // yehi model mera db k saath linked he--> ise per hum Mongo k cruid opt lgae ge
 // ise hum us file me import kre ge jha hum ne DB me user add/del/update krna hoga
+
+//same yehi kaam hum prisma k through bhi kare ge but wha mongoose.model ki bjae
+//prisma client ka concept hota or yahi hamare postgree data base k saath communicate kare ga
+
 export const User = mongoose.model("User", userSchema)

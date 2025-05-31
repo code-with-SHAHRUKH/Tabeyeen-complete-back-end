@@ -695,6 +695,34 @@ const getWatchHistory = AsyncHandler(async(req, res) => {
 
 
 
+// how to delete single video
+
+const deleteSingleUser = AsyncHandler(async (req, res) => {
+    const userId = req.params.userId;
+
+    // Find the video in the database
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(404).json(new ApiResponse(
+            404,
+            null,
+            "User not found"
+        ));
+    }
+
+
+   
+    // Delete video from database
+    await User.findByIdAndDelete(userId);
+
+    return res.status(200).json(new ApiResponse(
+        200,
+        null,
+        "user deleted successfully"
+    ));
+});
+
+
  export {
     registerUser,
     loginUser,
@@ -709,5 +737,6 @@ const getWatchHistory = AsyncHandler(async(req, res) => {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChannelProfile,
-    getWatchHistory
+    getWatchHistory,
+    deleteSingleUser
 };

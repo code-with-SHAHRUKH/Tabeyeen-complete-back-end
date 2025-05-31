@@ -12,7 +12,8 @@ import {registerUser,
         updateUserAvatar,
         updateUserCoverImage,
         getUserChannelProfile,
-        getWatchHistory
+        getWatchHistory,
+        deleteSingleUser
        } from "../Controllers/user.controller.js";
 
 import {upload} from "../middlewares/multer.middleware.js"
@@ -43,7 +44,7 @@ const router = Router()
 //or sirf super admin hi new user/admin add kr paae ga..
 router.route("/register").post(verifyJWT,isSuperAdmin,registerUser)//only super admin can add/register Sub admin
 // router.route("/register").post(registerUser)
-
+router.route("/delete-User/:userId").delete(verifyJWT,isSuperAdmin,deleteSingleUser)
 //login for super admin
 router.route("/login").post(loginUser)
 

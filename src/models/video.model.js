@@ -95,3 +95,52 @@ const videoSchema = new Schema(
 videoSchema.plugin(mongooseAggregatePaginate);// now we can write aggregation queries
 
 export const Video = mongoose.model("Video", videoSchema)
+
+
+
+//Same Above work in Prisma   :)
+//video model
+
+/*
+model Video {
+  id                 Int                @id @default(autoincrement())
+  termArabic         String
+  termRoman          String
+  explanationEnglish String
+  explanationUrdu    String
+  explanationHindi   String
+  source             String
+  reference          String?            // optional
+  videoLink          String?            // optional
+  otherReference     String?            // optional
+  ownerId            Int?
+  owner              User?              @relation(fields: [ownerId], references: [id])
+  quranReferences    QuranReference[]   @relation("VideoQuranReferences")
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+  */
+
+
+
+//user model  which is connected with video model
+
+/*
+model User {
+  id     Int     @id @default(autoincrement())
+  // Add more fields as needed
+  videos Video[]
+}
+*/
+
+
+
+//Quran model which is connected with video model
+/*
+model QuranReference {
+  id     Int     @id @default(autoincrement())
+  // Add your Quran reference fields here
+  videos Video[] @relation("VideoQuranReferences")
+}
+*/
